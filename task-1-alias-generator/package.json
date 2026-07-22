@@ -1,0 +1,14 @@
+{
+  "name": "task-1-alias-generator",
+  "version": "1.0.0",
+  "description": "Breaking Bad Alias Generator",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+  },
+  "devDependencies": {
+    "jest": "^30.4.2"
+  }
+}
