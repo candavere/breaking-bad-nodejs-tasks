@@ -156,6 +156,157 @@ app.get('/health', (req, res) => {
     database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'
   });
 });
+//Task 4: Mike's Cleanup crew
+
+app.put('/api/episodes/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid ID format',
+        message: 'Please provide a valid MongoDB ObjectId'
+      });
+    }
+    const existingEpisode = await Episode.findById(id);
+    if (!existingEpisode) {
+      return res.status(404).json({
+        success: false,
+        error: 'Episode not found',
+        message: `No episode found with ID: ${id}`
+      });
+    }
+    if (req.body.id && req.body.id !== existingEpisode.id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Cannot update original TVMaze ID field',
+        message: 'The TVMaze ID is immutable'
+      });
+    }
+    delete req.body.id;
+    const updatedEpisode = await Episode.findByIdAndUpdate(
+      id,                                    // Find by ID
+      { 
+        ...req.body,                        
+        updatedAt: new Date()                
+      },
+      { 
+        new: true,                          
+        runValidators: true                  
+      }
+    );
+    res.status(200).json({
+      success: true,
+      message: 'Episode fully updated (PUT)',
+      episode: updatedEpisode
+    });
+  } catch (error) {
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors).map(e => e.message);
+      return res.status(400).json({
+        success: false,
+        error: 'Validation Error',
+        messages: errors
+      });
+    }
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update episode',
+      message: error.message
+    });
+  }
+});
+app.patch('/api/episodes/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid ID format',
+        message: 'Please provide a valid MongoDB ObjectId'
+      });
+    }
+    const existingEpisode = await Episode.findById(id);
+    if (!existingEpisode) {
+      return res.status(404).json({
+        success: false,
+        error: 'Episode not found',
+        message: `No episode found with ID: ${id}`
+      });
+    }
+    if (req.body.id && req.body.id !== existingEpisode.id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Cannot update original TVMaze ID field',
+        message: 'The TVMaze ID is immutable'
+      });
+    }
+    delete req.body.id;
+    const fieldsToUpdate = Object.keys(req.body);
+    const updatedEpisode = await Episode.findByIdAndUpdate(
+      id,
+      { 
+        ...req.body,
+        updatedAt: new Date()
+      },
+      { 
+        new: true,
+        runValidators: true
+      }
+    );
+    res.status(200).json({
+      success: true,
+      message: 'Episode partially updated (PATCH)',
+      updatedFields: fieldsToUpdate,
+      episode: updatedEpisode
+    }); 
+  } catch (error) {
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors).map(e => e.message);
+      return res.status(400).json({
+        success: false,
+        error: 'Validation Error',
+        messages: errors
+      });
+    }    
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update episode',
+      message: error.message
+    });
+  }
+});
+app.delete('/api/episodes/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid ID format',
+        message: 'Please provide a valid MongoDB ObjectId'
+      });
+    }
+    const deletedEpisode = await Episode.findByIdAndDelete(id);
+    if (!deletedEpisode) {
+      return res.status(404).json({
+        success: false,
+        error: 'Episode not found',
+        message: `No episode found with ID: ${id}`
+      });
+    }    
+    res.status(200).json({
+      success: true,
+      message: 'Episode deleted successfully',
+      episode: deletedEpisode
+    });    
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete episode',
+      message: error.message
+    });
+  }
+});
 app.use((req, res) => {
   res.status(404).json({ 
     success: false, 
